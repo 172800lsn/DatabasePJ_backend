@@ -5,6 +5,8 @@ import com.example.vehiclerepairsystem.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @CrossOrigin(origins = "*") // 可根据需要限制来源
 @RestController
 @RequestMapping("/api/auth")
@@ -18,7 +20,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
-        System.out.println("[DEBUG] 进入 register 控制器");
+//        System.out.println("[DEBUG] 进入 register 控制器");
         try {
             User registeredUser = userService.registerUser(user);
             return ResponseEntity.ok("User registered successfully with role: " + registeredUser.getRole());
@@ -32,13 +34,17 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestParam String username, @RequestParam String password) {
+    public ResponseEntity<?> login(@RequestBody Map<String, String> loginData) {
+        String username = loginData.get("username");
+        String password = loginData.get("password");
+        System.out.println("Username: " + username);
+        System.out.println("Password: " + password);
+
         try {
-            User user = userService.findByUsername(username);
-            // 登录逻辑可扩展
+            User user = userService.findByUsernameAndPassword(username, password);
             return ResponseEntity.ok("Login successful for user: " + user.getUsername());
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body("用户名或密码错误");
         }
     }
 
