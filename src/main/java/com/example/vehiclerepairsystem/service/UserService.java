@@ -17,16 +17,34 @@ public class UserService {
     }
 
     public User registerUser(User user) {
+        System.out.println("[DEBUG] 开始注册用户：" + user);
+
         if (userRepository.existsByUsername(user.getUsername())) {
-            throw new IllegalArgumentException("Username already exists");
+            throw new IllegalArgumentException("用户名已存在");
         }
-        user.setPassword(passwordEncoder.encode(user.getPassword())); // 加密密码
-        return userRepository.save(user);
+
+        if (user.getRole() == null) {
+            System.out.println("[WARN] 用户未设置角色，默认设为 USER");
+            user.setRole(User.Role.USER);
+        }
+
+        if (user.getPassword() == null) {
+            throw new IllegalArgumentException("密码不能为空");
+        }
+
+        System.out.println("[DEBUG] 加密密码前：" + user.getPassword());
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPassword);
+        System.out.println("[DEBUG] 加密密码后：" + encodedPassword);
+
+        User savedUser = userRepository.save(user);
+        System.out.println("[DEBUG] 注册成功：" + savedUser);
+
+        return savedUser;
     }
 
     public User findByUsername(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("用户未找到"));
     }
 }
-

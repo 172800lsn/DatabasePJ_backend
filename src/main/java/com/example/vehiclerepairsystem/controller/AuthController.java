@@ -5,6 +5,7 @@ import com.example.vehiclerepairsystem.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@CrossOrigin(origins = "*") // 可根据需要限制来源
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -17,11 +18,16 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
+        System.out.println("[DEBUG] 进入 register 控制器");
         try {
             User registeredUser = userService.registerUser(user);
             return ResponseEntity.ok("User registered successfully with role: " + registeredUser.getRole());
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            e.printStackTrace(); // 打印已知异常
+            return ResponseEntity.badRequest().body("注册失败: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace(); // 打印未捕获异常
+            return ResponseEntity.status(500).body("内部错误: " + e.getMessage());
         }
     }
 
@@ -29,10 +35,15 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestParam String username, @RequestParam String password) {
         try {
             User user = userService.findByUsername(username);
-            // 验证逻辑可以扩展到 token 系统
+            // 登录逻辑可扩展
             return ResponseEntity.ok("Login successful for user: " + user.getUsername());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @GetMapping("/test")
+    public String test() {
+        return "Hello from backend!";
     }
 }
