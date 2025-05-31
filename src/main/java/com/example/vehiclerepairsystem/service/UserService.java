@@ -43,8 +43,13 @@ public class UserService {
         return savedUser;
     }
 
-    public User findByUsernameAndPassword(String username,String password) {
-        return userRepository.findByUsernameAndPassword(username, password)
+    public User findByUsername(String username,String password) {
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("用户未找到"));
+
+        if(!passwordEncoder.matches(password,user.getPassword())){
+            throw new IllegalArgumentException("密码错误");
+        }
+        return user;
     }
 }

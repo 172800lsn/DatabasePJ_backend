@@ -5,7 +5,9 @@ import com.example.vehiclerepairsystem.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @CrossOrigin(origins = "*") // 可根据需要限制来源
 @RestController
@@ -23,7 +25,7 @@ public class AuthController {
 //        System.out.println("[DEBUG] 进入 register 控制器");
         try {
             User registeredUser = userService.registerUser(user);
-            return ResponseEntity.ok("User registered successfully with role: " + registeredUser.getRole());
+            return ResponseEntity.ok("用户注册成功 : " + registeredUser.getRole());
         } catch (IllegalArgumentException e) {
             e.printStackTrace(); // 打印已知异常
             return ResponseEntity.badRequest().body("注册失败: " + e.getMessage());
@@ -41,10 +43,22 @@ public class AuthController {
         System.out.println("Password: " + password);
 
         try {
-            User user = userService.findByUsernameAndPassword(username, password);
-            return ResponseEntity.ok("Login successful for user: " + user.getUsername());
+            User user = userService.findByUsername(username, password);
+            System.out.println("User id: " + user.getId());
+            System.out.println("workType: " + user.getWorkType());
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", user.getId());
+            response.put("role", user.getRole());
+            response.put("username", user.getUsername());
+            response.put("name", user.getName());
+            response.put("email", user.getEmail());
+            response.put("workType", user.getWorkType());
+            response.put("hourlyRate", user.getHourlyRate());
+
+            System.out.println("User found: " + response);
+            return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("用户名或密码错误");
+            return ResponseEntity.badRequest().body("其他错误: " + e.getMessage());
         }
     }
 
