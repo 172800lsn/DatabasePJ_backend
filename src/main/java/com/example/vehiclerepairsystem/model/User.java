@@ -1,3 +1,4 @@
+//用户类
 package com.example.vehiclerepairsystem.model;
 
 import jakarta.persistence.*;

@@ -25,6 +25,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // ✅ 放行注册、登录、错误路径
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/error").permitAll()
+                        .requestMatchers("api/test/user/details", "api/test/user/vehicles").permitAll()
                         .anyRequest().authenticated()
                 );
         return http.build();

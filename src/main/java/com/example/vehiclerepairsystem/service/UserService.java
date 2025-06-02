@@ -52,4 +52,10 @@ public class UserService {
         }
         return user;
     }
+    // 根据用户名查找用户
+    public User findByUsernameReally(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("用户未找到"));
+    }
+
 }

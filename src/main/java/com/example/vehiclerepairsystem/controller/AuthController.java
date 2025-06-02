@@ -44,8 +44,8 @@ public class AuthController {
 
         try {
             User user = userService.findByUsername(username, password);
-            System.out.println("User id: " + user.getId());
-            System.out.println("workType: " + user.getWorkType());
+//            System.out.println("User id: " + user.getId());
+//            System.out.println("workType: " + user.getWorkType());
             Map<String, Object> response = new HashMap<>();
             response.put("id", user.getId());
             response.put("role", user.getRole());
