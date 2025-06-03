@@ -40,6 +40,19 @@ public class RepairOrder {
     @Column(nullable = false)
     private String description; // 问题描述
 
+    //用户反馈信息，可以为空
+    @Column(nullable = true)
+    private String feedback;
+
+    //用户是否催单，默认为false
+    @Column(nullable = false)
+    private Boolean isUrgent = false;
+
+    //用户评分，0.0分到10.0分，可以为空
+    @Column(nullable = true)
+    private Double score;
+
+
     @Column(nullable = false)
     private LocalDateTime createTime; // 预约时间
 

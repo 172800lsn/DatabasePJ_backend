@@ -15,7 +15,7 @@
   Lombok(减少样板代码)
 * settings.xml(配置本地仓库)
   C:/Users/用户名/.m2/settings.xml
-测试账号：
+    ****    测试账号：     ****
   (1)
 * username：charming
 * password：12345678

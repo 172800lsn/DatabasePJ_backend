@@ -129,5 +129,19 @@ public class RepairOrderService {
 
     }
 
+    @Transactional
+    public void submitFeedback(Long orderId, Boolean isUrgent, String feedback, Double score) {
+        // 根据订单ID查询订单
+        RepairOrder repairOrder = repairOrderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("维修订单未找到"));
+
+        // 更新订单反馈信息
+        repairOrder.setIsUrgent(isUrgent);
+        repairOrder.setFeedback(feedback);
+        repairOrder.setScore(score);
+
+        // 保存更新后的订单
+        repairOrderRepository.save(repairOrder);
+    }
 
 }

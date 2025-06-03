@@ -26,7 +26,8 @@ public class SecurityConfig {
                         // ✅ 放行注册、登录、错误路径
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/error").permitAll()
                         .requestMatchers("api/test/user/details", "api/test/user/vehicles").permitAll()
-                        .requestMatchers("/api/repair-orders/report","/api/repair-orders/repairs").permitAll()
+                        .requestMatchers("/api/repair-orders/report","/api/repair-orders/repairs",
+                                "/api/repair-orders/submit-feedback").permitAll()
                         .anyRequest().authenticated()
                 );
         return http.build();

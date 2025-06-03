@@ -61,5 +61,23 @@ public class RepairOrderController {
         }
     }
 
+    @PostMapping("/submit-feedback")
+    public ResponseEntity<?> submitFeedback(@RequestBody Map<String, Object> feedbackRequest) {
+        try {
+            // 提取前端传来的数据
+            Long orderId = Long.valueOf(feedbackRequest.get("orderId").toString());
+            Boolean isUrgent = (Boolean) feedbackRequest.get("isUrgent");
+            String feedback = (String) feedbackRequest.get("feedback");
+            Double score = feedbackRequest.get("score") != null ? Double.valueOf(feedbackRequest.get("score").toString()) : null;
+
+            // 调用服务层方法进行处理
+            repairOrderService.submitFeedback(orderId, isUrgent, feedback, score);
+
+            return ResponseEntity.ok(Map.of("message", "反馈提交成功！"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("message", "提交反馈失败：" + e.getMessage()));
+        }
+    }
 
 }
