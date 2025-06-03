@@ -10,6 +10,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class RepairOrderService {
@@ -50,4 +55,79 @@ public class RepairOrderService {
 
         return repairOrderRepository.save(repairOrder); // 保存订单到数据库
     }
+
+    // 根据用户名获取维修记录
+    public List<Map<String, Object>> getRepairsByUsername(String username) {
+        // 检查用户是否存在
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("用户未找到"));
+
+        // 查询用户的维修记录
+        List<RepairOrder> repairOrders;
+        if (user.getRole() == User.Role.WORKER) {
+            // 如果是维修工，只查询自己分配的维修记录
+            repairOrders = repairOrderRepository.findByWorkersWorker(user);
+        } else {
+            // 用户（或管理员）查询自己提交的所有维修记录
+            repairOrders = repairOrderRepository.findByRequestUser(user);
+        }
+
+        // 装配维修记录的数据结构
+        return repairOrders.stream().map(this::formatRepairOrder).collect(Collectors.toList());
+    }
+
+    // 格式化单个维修订单的输出
+    private Map<String, Object> formatRepairOrder(RepairOrder repairOrder) {
+        List<Map<String, Object>> materials = Optional.ofNullable(repairOrder.getMaterials())
+                .orElse(List.of())
+                .stream()
+                .map(material -> {
+                    Map<String, Object> materialMap = new HashMap<>();
+                    materialMap.put("name", material.getName());
+                    materialMap.put("quantity", material.getQuantity());
+                    materialMap.put("price", material.getPrice());
+                    materialMap.put("subtotal", material.getSubtotal());
+                    return materialMap;
+                })
+                .collect(Collectors.toList());
+
+        double totalCost = materials.stream()
+                .mapToDouble(material -> ((Number) material.get("subtotal")).doubleValue())
+                .sum();
+
+        List<Map<String, Object>> workers = Optional.ofNullable(repairOrder.getWorkers())
+                .orElse(List.of())
+                .stream()
+                .map(workerAssignment -> {
+                    Map<String, Object> workerMap = new HashMap<>();
+                    User worker = workerAssignment.getWorker();
+                    workerMap.put("id", worker.getId());
+                    workerMap.put("name", worker.getName());
+                    workerMap.put("role", worker.getRole());
+                    workerMap.put("workType", worker.getWorkType());
+                    return workerMap;
+                })
+                .collect(Collectors.toList());
+
+        Vehicle vehicle = Optional.ofNullable(repairOrder.getVehicle())
+                .orElseThrow(() -> new IllegalArgumentException("RepairOrder 的 Vehicle 不存在"));
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", repairOrder.getId());
+        result.put("licensePlate", vehicle.getLicensePlate());
+        result.put("brand", vehicle.getBrand());
+        result.put("model", vehicle.getModel());
+        result.put("description", repairOrder.getDescription());
+        result.put("status", repairOrder.getStatus());
+        result.put("startTime", repairOrder.getCreateTime());
+        result.put("completionTime", repairOrder.getCompletionTime());
+        result.put("workers", workers);
+        result.put("materials", materials);
+        result.put("totalCost", totalCost);
+
+        return result;
+
+    }
+
+
 }

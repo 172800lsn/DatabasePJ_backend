@@ -5,7 +5,10 @@ import com.example.vehiclerepairsystem.service.RepairOrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*") // 可根据需要限制来源
 @RestController
@@ -42,5 +45,21 @@ public class RepairOrderController {
             return ResponseEntity.badRequest().body("提交失败：" + e.getMessage());
         }
     }
+
+    // 新增获取维修记录的接口
+    @PostMapping("/repairs")
+    public ResponseEntity<?> getRepairs(@RequestBody Map<String, String> request) {
+        try {
+            String username = request.get("username");
+            System.out.println("username: " + username);
+            // 获取维修记录
+            List<Map<String, Object>> repairs = repairOrderService.getRepairsByUsername(username);
+            return ResponseEntity.ok(Map.of("repairs", repairs)); // 响应符合前端结构
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("查询失败：" + e.getMessage());
+        }
+    }
+
 
 }
