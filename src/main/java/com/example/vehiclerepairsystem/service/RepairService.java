@@ -47,7 +47,7 @@ public class RepairService {
         assignment.setWorker(assignedWorker);
         // 保存分配关系（需要注入OrderWorkerAssignmentRepository）
         event.repairOrder().getWorkers().add(assignment);
-        event.repairOrder().setStatus(RepairOrder.Status.IN_PROGRESS);
+        event.repairOrder().setStatus(RepairOrder.Status.TO_ACCEPT);
         assignmentRepository.save(assignment);
     }
     @Transactional
@@ -77,11 +77,13 @@ public class RepairService {
             payment.setAmount(totalAmount);
         }
     }
-    public List<RepairOrder> findRepairOrdersByWorkerName(String workerName) {
+    public List<RepairOrder> findRepairOrdersByWorkerNameAndStatus(String workerName, RepairOrder.Status status) {
         User worker = userRepository.findByUsername(workerName)
                .orElseThrow(() -> new IllegalArgumentException("用户未找到"));
-        return repairOrderRepository.findByWorkersWorker(worker);
+        return repairOrderRepository.findByWorkersWorkerAndStatus(worker, status);
     }
-
-
+    public RepairOrder findRepairOrderById(Long id) {
+        return repairOrderRepository.findById(id)
+               .orElseThrow(() -> new IllegalArgumentException("维修记录未找到"));
+    }
 }

@@ -33,8 +33,8 @@ public class UserController {
         System.out.println("Username: " + username);
         try {
             User user = userService.findByUsernameReally(username);
-//            System.out.println("User id: " + user.getId());
-//            System.out.println("workType: " + user.getWorkType());
+            System.out.println("User id: " + user.getId());
+            System.out.println("workType: " + user.getWorkType());
             Map<String, Object> response = new HashMap<>();
             response.put("id", user.getId());
             response.put("role", user.getRole());

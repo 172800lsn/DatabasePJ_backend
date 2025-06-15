@@ -69,7 +69,8 @@ public class RepairOrder {
 
 
     public enum Status {
-        PENDING, // 待分配
+        PENDING,
+        TO_ACCEPT,// 待分配
         IN_PROGRESS, // 正在维修
         COMPLETED, // 已完成
         CANCELLED // 已取消

@@ -1,7 +1,7 @@
 package com.example.vehiclerepairsystem.controller;
 
 import com.example.vehiclerepairsystem.model.RepairOrder;
-import com.example.vehiclerepairsystem.service.RepairOrderService;
+import com.example.vehiclerepairsystem.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,9 +16,11 @@ import java.util.stream.Collectors;
 public class RepairOrderController {
 
     private final RepairOrderService repairOrderService;
+    private final RepairService repairService;
 
-    public RepairOrderController(RepairOrderService repairOrderService) {
+    public RepairOrderController(RepairOrderService repairOrderService, RepairService repairService) {
         this.repairOrderService = repairOrderService;
+        this.repairService = repairService;
     }
 
     @PostMapping("/report")
@@ -78,6 +80,55 @@ public class RepairOrderController {
             e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("message", "提交反馈失败：" + e.getMessage()));
         }
+    }
+    @PostMapping("/worker/tasks")
+    public ResponseEntity<?> getFeedback(@RequestBody Map<String, String> request) {
+        try {
+            String workerName = request.get("username");
+            List<RepairOrder> repairOrders = repairService.findRepairOrdersByWorkerNameAndStatus(workerName, RepairOrder.Status.IN_PROGRESS);
+            return ResponseEntity.ok(Map.of("tasks", repairOrders));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("message", "获取工单失败" + e.getMessage()));
+        }
+    }
+    @PostMapping("/worker/pending-tasks")
+    public ResponseEntity<?> getPendFeedback(@RequestBody Map<String, String> request) {
+        try {
+            String workerName = request.get("username");
+            List<RepairOrder> repairOrders = repairService.findRepairOrdersByWorkerNameAndStatus(workerName, RepairOrder.Status.TO_ACCEPT);
+            return ResponseEntity.ok(Map.of("tasks", repairOrders));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("message", "获取工单失败" + e.getMessage()));
+        }
+    }
+    @PostMapping("/worker/history-tasks")
+    public ResponseEntity<?> getHisFeedback(@RequestBody Map<String, String> request) {
+        try {
+            String workerName = request.get("username");
+            List<RepairOrder> repairOrders = repairService.findRepairOrdersByWorkerNameAndStatus(workerName, RepairOrder.Status.COMPLETED);
+            return ResponseEntity.ok(Map.of("tasks", repairOrders));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("message", "获取工单失败" + e.getMessage()));
+        }
+    }
+    @GetMapping("/{task-id}")
+    public ResponseEntity<?> getTask(@PathVariable("task-id") String taskId) {
+        try {
+            Long orderId = Long.valueOf(taskId);
+            RepairOrder repairOrder = repairService.findRepairOrderById(orderId);
+            return ResponseEntity.ok(Map.of("task", repairOrder));
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of("message", "获取工单失败" + e.getMessage()));
+        }
+
     }
 
 }
