@@ -6,9 +6,11 @@ import com.example.vehiclerepairsystem.model.Vehicle;
 import com.example.vehiclerepairsystem.repository.RepairOrderRepository;
 import com.example.vehiclerepairsystem.repository.UserRepository;
 import com.example.vehiclerepairsystem.repository.VehicleRepository;
+import com.example.vehiclerepairsystem.DTO.RepairOrderCreatedEvent;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.context.ApplicationEventPublisher;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +24,8 @@ public class RepairOrderService {
     private final RepairOrderRepository repairOrderRepository;
     private final UserRepository userRepository;
     private final VehicleRepository vehicleRepository;
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     public RepairOrderService(RepairOrderRepository repairOrderRepository,
                               UserRepository userRepository, VehicleRepository vehicleRepository) {
@@ -52,6 +56,7 @@ public class RepairOrderService {
 
         repairOrder.setStatus(RepairOrder.Status.PENDING); // 初始状态为
         System.out.println("Repair order created: " + repairOrder);
+        eventPublisher.publishEvent(new RepairOrderCreatedEvent(this, repairOrder));
 
         return repairOrderRepository.save(repairOrder); // 保存订单到数据库
     }

@@ -27,7 +27,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/error").permitAll()
                         .requestMatchers("api/test/user/details", "api/test/user/vehicles").permitAll()
                         .requestMatchers("/api/repair-orders/report","/api/repair-orders/repairs",
-                                "/api/repair-orders/submit-feedback").permitAll()
+                                "/api/repair-orders/submit-feedback","/api/repair-orders/worker/tasks").permitAll()
                         .anyRequest().authenticated()
                 );
         return http.build();
