@@ -35,7 +35,7 @@ public class User {
     //工种：维修工特有字段
     private String workType;
     //时薪：维修工特有字段
-    private Double hourlyRate;
+    private BigDecimal hourlyRate;
 
     public enum Role {
         USER,

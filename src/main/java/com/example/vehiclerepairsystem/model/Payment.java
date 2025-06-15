@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -23,18 +25,9 @@ public class Payment {
     private RepairOrder repairOrder;
 
     @Column(nullable = true)
-    private Double totalMaterialCost; // 材料费总和
-
+    private BigDecimal totalMaterialCost; // 材料费总和
 
     @Column(nullable = false)
-    private Double amount; // 支付金额
+    private BigDecimal amount; // 支付金额
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private PaymentMethod method; // 支付方式
-
-
-    public enum PaymentMethod {
-        CASH, CREDIT_CARD, DEBIT_CARD, ONLINE
-    }
 }
