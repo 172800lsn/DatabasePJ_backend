@@ -114,5 +114,16 @@ public class UserController {
             return ResponseEntity.status(500).body("服务器内部错误: " + e.getMessage());
         }
     }
+    @PatchMapping("/update/{userId}")
+    public ResponseEntity<?> updateUser(@PathVariable Long userId, @RequestBody User updatedUser) {
+        try {
+            User user = userService.updateUser(userId, updatedUser);
+            return ResponseEntity.ok(user);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("服务器内部错误: " + e.getMessage());
+        }
+    }
 
 }

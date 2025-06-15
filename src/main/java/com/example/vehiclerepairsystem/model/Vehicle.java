@@ -31,7 +31,6 @@ public class Vehicle {
     @Column(nullable = false)
     private String model; // 型号
 
-    @Column(nullable = false)
     private Integer year; // 生产年份
 
     private String color; // 颜色

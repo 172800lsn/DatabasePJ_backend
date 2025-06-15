@@ -69,6 +69,9 @@ public class SecurityConfig {
                         // 仅管理员可以访问
                         .requestMatchers("/api/test/user/delete/**").permitAll() // 删除用户
                          // 仅管理员可以访问
+                        .requestMatchers("/api/test/user/update/**").permitAll() // 删除用户
+
+                        .requestMatchers("/api/admin/vehicles","/api/admin/vehicles/add","/api/admin/vehicles/**").permitAll() // 删除用户
 
                         // ✅ 放行维修订单部分 API
                         .requestMatchers("/api/repair-orders/report",
