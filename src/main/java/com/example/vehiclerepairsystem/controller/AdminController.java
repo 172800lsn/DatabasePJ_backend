@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -85,4 +86,40 @@ public class AdminController {
             return ResponseEntity.status(500).body("删除车辆失败: " + e.getMessage());
         }
     }
+
+    /**
+     * 查询各车型的维修统计数据
+     */
+    @GetMapping("/statistics/vehicle-repairs")
+    public ResponseEntity<List<Map<String, Object>>> getVehicleRepairStatistics() {
+        try {
+            List<Map<String, Object>> statistics = vehicleService.getVehicleRepairStatistics();
+            return ResponseEntity.ok(statistics);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
+    // 获取所有车型的维修频率
+    @GetMapping("/statistics/vehicle-repair-frequency")
+    public ResponseEntity<List<Map<String, Object>>> getVehicleRepairFrequency() {
+        try {
+            List<Map<String, Object>> statistics = vehicleService.getVehicleRepairFrequency();
+            return ResponseEntity.ok(statistics);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
+    // 获取特定车型最常出现的故障类型
+    @GetMapping("/statistics/most-frequent-issue")
+    public ResponseEntity<Map<String, Object>> getMostFrequentIssueByModel(@RequestParam String model) {
+        try {
+            Map<String, Object> issueStats = vehicleService.getMostFrequentIssueByModel(model);
+            return ResponseEntity.ok(issueStats);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);
+        }
+    }
+
 }
