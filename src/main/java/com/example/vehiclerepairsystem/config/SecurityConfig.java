@@ -73,7 +73,8 @@ public class SecurityConfig {
                         // ✅ 放行维修订单部分 API
                         .requestMatchers("/api/repair-orders/report",
                                 "/api/repair-orders/repairs",
-                                "/api/repair-orders/submit-feedback").permitAll()
+                                "/api/repair-orders/submit-feedback",
+                                "/api/repair-orders/worker/tasks").permitAll()
 
                         // 其他请求需要认证
                         .anyRequest().authenticated()
