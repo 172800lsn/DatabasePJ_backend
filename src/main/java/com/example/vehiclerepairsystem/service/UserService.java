@@ -2,6 +2,8 @@ package com.example.vehiclerepairsystem.service;
 
 import com.example.vehiclerepairsystem.model.User;
 import com.example.vehiclerepairsystem.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -56,6 +58,16 @@ public class UserService {
     public User findByUsernameReally(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("用户未找到"));
+    }
+    public Page<User> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable);
+    }
+
+    public void deleteUser(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new IllegalArgumentException("用户不存在！");
+        }
+        userRepository.deleteById(userId);
     }
 
 }

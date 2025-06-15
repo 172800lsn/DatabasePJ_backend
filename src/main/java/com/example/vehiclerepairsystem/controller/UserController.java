@@ -4,6 +4,9 @@ import com.example.vehiclerepairsystem.model.User;
 import com.example.vehiclerepairsystem.model.Vehicle;
 import com.example.vehiclerepairsystem.service.UserService;
 import com.example.vehiclerepairsystem.service.VehicleService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -75,27 +78,41 @@ public class UserController {
         }catch (Exception e){
             return ResponseEntity.badRequest().body("内部服务器错误: " + e.getMessage());
         }
-//        try {
-//            List<Vehicle> vehicles = vehicleService.findVehiclesByOwnerId(userId);
-//
-////            System.out.println("workType: " + user.getWorkType());
-//            //声明一个Map<String, Object>数组类型的response对象
-//            Map<String, Object>[] response = new HashMap[vehicles.size()];
-//            for (int i = 0; i < vehicles.size(); i++){
-//                response[i] = new HashMap<>();  // 初始化每个Map
-//                response[i].put("id", vehicles.get(i).getId());
-//                response[i].put("owner", vehicles.get(i).getOwner());
-//                response[i].put("licensePlate", vehicles.get(i).getLicensePlate());
-//                response[i].put("brand", vehicles.get(i).getBrand());
-//                response[i].put("color", vehicles.get(i).getColor());
-//                response[i].put("year", vehicles.get(i).getYear());
-//                response[i].put("model", vehicles.get(i).getModel());
-//            }
-//
-//            System.out.println("User found: " + response);
-//            return ResponseEntity.ok(response);
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest().body("其他错误: " + e.getMessage());
-//        }
     }
+
+    // 分页获取用户列表
+    @PostMapping("/get-all")
+    public ResponseEntity<?> getAllUsers(@RequestBody Map<String, Object> pageableData) {
+        try {
+            int page = (int) pageableData.get("page");
+            int size = (int) pageableData.get("size");
+            String sortBy = pageableData.getOrDefault("sortBy", "id").toString();
+            String direction = pageableData.getOrDefault("direction", "ASC").toString();
+
+            Page<User> usersPage = userService.getAllUsers(PageRequest.of(page, size,
+                    direction.equalsIgnoreCase("DESC") ? Sort.Direction.DESC : Sort.Direction.ASC, sortBy));
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("users", usersPage.getContent());
+            response.put("total", usersPage.getTotalElements());
+            response.put("pages", usersPage.getTotalPages());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("服务器内部错误: " + e.getMessage());
+        }
+    }
+
+    // 删除用户
+    @DeleteMapping("/delete/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
+        try {
+            userService.deleteUser(userId);
+            return ResponseEntity.ok("用户删除成功！");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("删除失败: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("服务器内部错误: " + e.getMessage());
+        }
+    }
+
 }
