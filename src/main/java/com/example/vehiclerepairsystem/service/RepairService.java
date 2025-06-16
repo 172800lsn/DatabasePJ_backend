@@ -3,6 +3,7 @@ package com.example.vehiclerepairsystem.service;
 import com.example.vehiclerepairsystem.model.*;
 import com.example.vehiclerepairsystem.repository.*;
 import jakarta.transaction.Transactional;
+import org.hibernate.sql.ast.tree.update.Assignment;
 import org.springframework.scheduling.annotation.Async;
 
 import com.example.vehiclerepairsystem.DTO.RepairOrderCreatedEvent;
@@ -13,8 +14,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 @Service
 public class RepairService {
@@ -46,44 +49,62 @@ public class RepairService {
         // 创建分配关系
         assignment.setWorker(assignedWorker);
         // 保存分配关系（需要注入OrderWorkerAssignmentRepository）
-        event.repairOrder().getWorkers().add(assignment);
+        event.repairOrder().setWorker(assignment);
         event.repairOrder().setStatus(RepairOrder.Status.TO_ACCEPT);
         assignmentRepository.save(assignment);
     }
     @Transactional
-    public void updateRepairOrderStatus(Long orderId,List<Material> materials,boolean isCompleted) {
-        RepairOrder repairOrder = repairOrderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("维修记录未找到"));
-        repairOrder.setMaterials(materials);
-        BigDecimal totalMaterialCost=materials.stream()
-                .map(Material::getSubtotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    public void updateMaterials(Long orderId,List<Map<String, Object>> materials) {
+        RepairOrder order = repairOrderRepository.findById(orderId)
+              .orElseThrow(() -> new IllegalArgumentException("维修记录未找到"));
+        User worker = order.getWorker().getWorker();
+        order.getMaterials().clear();
+        List<Material> materialList = materials.stream().map(mat -> {
+            Material material = new Material();
+            Object nameObj = mat.get("name");
+            material.setName(nameObj != null ? nameObj.toString() : "");
+            material.setQuantity(((Integer) mat.get("quantity")).intValue());
+            material.setPrice(new BigDecimal(0));
+            material.setRepairOrder(order);
+            material.setSubmittedByWorker(worker);
+            return material;
+        }).collect(Collectors.toList());
 
-        if(isCompleted){
-            repairOrder.setStatus(RepairOrder.Status.COMPLETED);
-            repairOrder.setCompletionTime(LocalDateTime.now());
-            long hoursWorked = ChronoUnit.HOURS.between(
-                    repairOrder.getCreateTime(),
-                    repairOrder.getCompletionTime()
-            );
-            BigDecimal totalAmount = repairOrder.getWorkers().stream()
-                    .map(assignment -> assignment.getWorker().getHourlyRate())
-                    .filter(Objects::nonNull)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add)
-                    .multiply(BigDecimal.valueOf(hoursWorked));
-            Payment payment = new Payment();
-            payment.setRepairOrder(repairOrder);
-            payment.setTotalMaterialCost(totalMaterialCost);
-            payment.setAmount(totalAmount);
-        }
+        order.getMaterials().addAll(materialList);
+        repairOrderRepository.save(order);
     }
     public List<RepairOrder> findRepairOrdersByWorkerNameAndStatus(String workerName, RepairOrder.Status status) {
         User worker = userRepository.findByUsername(workerName)
                .orElseThrow(() -> new IllegalArgumentException("用户未找到"));
-        return repairOrderRepository.findByWorkersWorkerAndStatus(worker, status);
+        return repairOrderRepository.findByWorker_WorkerAndStatus(worker, status);
     }
     public RepairOrder findRepairOrderById(Long id) {
         return repairOrderRepository.findById(id)
                .orElseThrow(() -> new IllegalArgumentException("维修记录未找到"));
     }
+    @Transactional
+    public void acceptTask(Long taskId, String workerName) {
+        RepairOrder repairOrder = repairOrderRepository.findById(taskId)
+               .orElseThrow(() -> new IllegalArgumentException("维修记录未找到"));
+        repairOrder.setStatus(RepairOrder.Status.IN_PROGRESS);
+    }
+    @Transactional
+    public void rejectTask(Long taskId, String workerName) {
+        RepairOrder repairOrder = repairOrderRepository.findById(taskId)
+              .orElseThrow(() -> new IllegalArgumentException("维修记录未找到"));
+       OrderWorkerAssignment assignment = assignmentRepository.findByRepairOrderId(taskId);
+        List<User> workers = userRepository.findByRole(User.Role.WORKER);
+        if (workers.isEmpty()) {
+            throw new IllegalStateException("没有可用的维修工人");
+        }
+        User assignedWorker = workers.get(new Random().nextInt(workers.size()));
+        assignment.setWorker(assignedWorker);
+    }
+    @Transactional
+    public void completeTask(Long taskId) {
+        RepairOrder repairOrder = repairOrderRepository.findById(taskId)
+               .orElseThrow(() -> new IllegalArgumentException("维修记录未找到"));
+        repairOrder.setStatus(RepairOrder.Status.COMPLETED);
+    }
+
 }

@@ -16,7 +16,7 @@ public class OrderWorkerAssignment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "repair_order_id", nullable = false)
     private RepairOrder repairOrder;
 

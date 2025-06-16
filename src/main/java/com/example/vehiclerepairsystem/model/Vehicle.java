@@ -34,4 +34,8 @@ public class Vehicle {
     private Integer year; // 生产年份
 
     private String color; // 颜色
+    public String getVehicleInfo() {
+        return "Vehicle [ \n" + " 车牌：" + licensePlate + "，型号：" + brand
+                + "\n，模式：" + model + "，年份：" + year + "，颜色：" + color + "]";
+    }
 }

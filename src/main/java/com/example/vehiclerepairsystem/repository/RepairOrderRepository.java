@@ -13,6 +13,6 @@ public interface RepairOrderRepository extends JpaRepository<RepairOrder, Long> 
     List<RepairOrder> findByRequestUser(User user);
 
     // 查找某维修工分配到的维修记录
-    List<RepairOrder> findByWorkersWorker(User user);
-    List<RepairOrder> findByWorkersWorkerAndStatus(User worker,RepairOrder.Status status);
+    List<RepairOrder> findByWorker(User user);
+    List<RepairOrder> findByWorker_WorkerAndStatus(User worker, RepairOrder.Status status);
 }

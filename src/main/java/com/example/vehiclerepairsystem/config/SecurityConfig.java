@@ -80,7 +80,15 @@ public class SecurityConfig {
                         .requestMatchers("/api/repair-orders/report",
                                 "/api/repair-orders/repairs",
                                 "/api/repair-orders/submit-feedback",
-                                "/api/repair-orders/worker/tasks").permitAll()
+                                "/api/repair-orders/worker/tasks",
+                                "/api/repair-orders/accept",
+                                "/api/repair-orders/worker/pending-tasks",
+                                "/api/repair-orders/worker/history-tasks",
+                                "/api/repair-orders/reject",
+                                "/api/repair-orders/{task-id}",
+                                "/api/repair-orders/{task-id}/materials",
+                                "/api/repair-orders/{task-id}/complete"
+                                ).permitAll()
 
                         // 其他请求需要认证
                         .anyRequest().authenticated()

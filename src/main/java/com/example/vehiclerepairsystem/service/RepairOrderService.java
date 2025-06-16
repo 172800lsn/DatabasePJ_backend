@@ -1,5 +1,6 @@
 package com.example.vehiclerepairsystem.service;
 
+import com.example.vehiclerepairsystem.model.OrderWorkerAssignment;
 import com.example.vehiclerepairsystem.model.RepairOrder;
 import com.example.vehiclerepairsystem.model.User;
 import com.example.vehiclerepairsystem.model.Vehicle;
@@ -56,9 +57,10 @@ public class RepairOrderService {
 
         repairOrder.setStatus(RepairOrder.Status.PENDING); // 初始状态为
         System.out.println("Repair order created: " + repairOrder);
+        repairOrderRepository.save(repairOrder);
         eventPublisher.publishEvent(new RepairOrderCreatedEvent(this, repairOrder));
 
-        return repairOrderRepository.save(repairOrder); // 保存订单到数据库
+        return repairOrder; // 保存订单到数据库
     }
 
     // 根据用户名获取维修记录
@@ -71,7 +73,7 @@ public class RepairOrderService {
         List<RepairOrder> repairOrders;
         if (user.getRole() == User.Role.WORKER) {
             // 如果是维修工，只查询自己分配的维修记录
-            repairOrders = repairOrderRepository.findByWorkersWorker(user);
+            repairOrders = repairOrderRepository.findByWorker(user);
         } else {
             // 用户（或管理员）查询自己提交的所有维修记录
             repairOrders = repairOrderRepository.findByRequestUser(user);
@@ -100,20 +102,13 @@ public class RepairOrderService {
                 .mapToDouble(material -> ((Number) material.get("subtotal")).doubleValue())
                 .sum();
 
-        List<Map<String, Object>> workers = Optional.ofNullable(repairOrder.getWorkers())
-                .orElse(List.of())
-                .stream()
-                .map(workerAssignment -> {
-                    Map<String, Object> workerMap = new HashMap<>();
-                    User worker = workerAssignment.getWorker();
-                    workerMap.put("id", worker.getId());
-                    workerMap.put("name", worker.getName());
-                    workerMap.put("role", worker.getRole());
-                    workerMap.put("workType", worker.getWorkType());
-                    return workerMap;
-                })
-                .collect(Collectors.toList());
-
+        Map<String, Object> workerResult = new HashMap<>();
+        OrderWorkerAssignment workerAssignment = repairOrder.getWorker();
+        User worker = workerAssignment.getWorker();
+        workerResult.put("id", worker.getId());
+        workerResult.put("name", worker.getName());
+        workerResult.put("role", worker.getRole());
+        workerResult.put("workType", worker.getWorkType());
         Vehicle vehicle = Optional.ofNullable(repairOrder.getVehicle())
                 .orElseThrow(() -> new IllegalArgumentException("RepairOrder 的 Vehicle 不存在"));
 
@@ -126,7 +121,7 @@ public class RepairOrderService {
         result.put("status", repairOrder.getStatus());
         result.put("startTime", repairOrder.getCreateTime());
         result.put("completionTime", repairOrder.getCompletionTime());
-        result.put("workers", workers);
+        result.put("worker", workerResult);
         result.put("materials", materials);
         result.put("totalCost", totalCost);
 

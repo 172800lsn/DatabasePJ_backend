@@ -30,8 +30,8 @@ public class RepairOrder {
     @JoinColumn(name = "vehicle_id", nullable = false)
     private Vehicle vehicle;
 
-    @OneToMany(mappedBy = "repairOrder", cascade = CascadeType.ALL) // 多对多关系的中间表
-    private List<OrderWorkerAssignment> workers;
+    @OneToOne(mappedBy = "repairOrder", cascade = CascadeType.ALL) // 多对多关系的中间表
+    private  OrderWorkerAssignment worker;
 
     @OneToOne(mappedBy = "repairOrder", cascade = CascadeType.ALL) // 付款信息
     private Payment payment;
@@ -59,7 +59,7 @@ public class RepairOrder {
     private LocalDateTime completionTime; // 完成时间
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false,columnDefinition = "VARCHAR(20)")
     private Status status; // 订单状态
 
     // 与材料的关联关系

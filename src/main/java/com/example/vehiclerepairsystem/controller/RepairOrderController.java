@@ -1,6 +1,7 @@
 package com.example.vehiclerepairsystem.controller;
 
 import com.example.vehiclerepairsystem.model.RepairOrder;
+import com.example.vehiclerepairsystem.model.Vehicle;
 import com.example.vehiclerepairsystem.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*") // 可根据需要限制来源
@@ -86,7 +88,17 @@ public class RepairOrderController {
         try {
             String workerName = request.get("username");
             List<RepairOrder> repairOrders = repairService.findRepairOrdersByWorkerNameAndStatus(workerName, RepairOrder.Status.IN_PROGRESS);
-            return ResponseEntity.ok(Map.of("tasks", repairOrders));
+            List<Map<String, Object>> formattedTasks = repairOrders.stream().map(order -> {
+                Map<String, Object> task = new HashMap<>();
+                task.put("id", order.getId());
+                task.put("description", order.getDescription());
+                Vehicle vehicle = order.getVehicle();
+                String vehicleInfo = vehicle.getVehicleInfo();
+                task.put("vehicleInfo", vehicleInfo);
+                return task;
+            }).collect(Collectors.toList());
+
+            return ResponseEntity.ok(Map.of("tasks", formattedTasks));
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -98,7 +110,17 @@ public class RepairOrderController {
         try {
             String workerName = request.get("username");
             List<RepairOrder> repairOrders = repairService.findRepairOrdersByWorkerNameAndStatus(workerName, RepairOrder.Status.TO_ACCEPT);
-            return ResponseEntity.ok(Map.of("tasks", repairOrders));
+            List<Map<String, Object>> formattedTasks = repairOrders.stream().map(order -> {
+                Map<String, Object> task = new HashMap<>();
+                task.put("id", order.getId());
+                task.put("description", order.getDescription());
+                Vehicle vehicle = order.getVehicle();
+                String vehicleInfo = vehicle.getVehicleInfo();
+                task.put("vehicleInfo", vehicleInfo);
+                return task;
+            }).collect(Collectors.toList());
+
+            return ResponseEntity.ok(Map.of("tasks", formattedTasks));
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -110,7 +132,17 @@ public class RepairOrderController {
         try {
             String workerName = request.get("username");
             List<RepairOrder> repairOrders = repairService.findRepairOrdersByWorkerNameAndStatus(workerName, RepairOrder.Status.COMPLETED);
-            return ResponseEntity.ok(Map.of("tasks", repairOrders));
+            List<Map<String, Object>> formattedTasks = repairOrders.stream().map(order -> {
+                Map<String, Object> task = new HashMap<>();
+                task.put("id", order.getId());
+                task.put("description", order.getDescription());
+                Vehicle vehicle = order.getVehicle();
+                String vehicleInfo = vehicle.getVehicleInfo();
+                task.put("vehicleInfo", vehicleInfo);
+                return task;
+            }).collect(Collectors.toList());
+
+            return ResponseEntity.ok(Map.of("tasks", formattedTasks));
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -122,13 +154,82 @@ public class RepairOrderController {
         try {
             Long orderId = Long.valueOf(taskId);
             RepairOrder repairOrder = repairService.findRepairOrderById(orderId);
-            return ResponseEntity.ok(Map.of("task", repairOrder));
+            Map<String, Object> response = new HashMap<>();
+            response.put("description", repairOrder.getDescription());
+
+            // 获取车辆信息
+            Vehicle vehicle = repairOrder.getVehicle();
+            response.put("vehicleInfo", vehicle != null ? vehicle.getVehicleInfo() : "");
+
+            // 处理材料信息
+            List<Map<String, Object>> materials = Optional.ofNullable(repairOrder.getMaterials())
+                    .orElse(List.of())
+                    .stream()
+                    .map(material -> {
+                        Map<String, Object> matMap = new HashMap<>();
+                        matMap.put("name", material.getName());
+                        matMap.put("quantity", material.getQuantity());
+                        matMap.put("price", material.getPrice());
+                        return matMap;
+                    }).collect(Collectors.toList());
+
+            response.put("materials", materials);
+
+            return ResponseEntity.ok(response);
         }
         catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of("message", "获取工单失败" + e.getMessage()));
         }
 
+
+    }
+    @PostMapping("/accept")
+    public void acceptTask(@RequestBody Map<String, Object> request) {
+        try {
+            Long taskId = Long.valueOf(request.get("taskId").toString());
+            String workerName = (String) request.get("worker");
+
+            // 调用服务层处理工单接受逻辑
+            repairService.acceptTask(taskId, workerName);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    @PostMapping("/reject")
+    public void rejectTask(@RequestBody Map<String, Object> request) {
+        try {
+            Long taskId = Long.valueOf(request.get("taskId").toString());
+            String workerName = (String) request.get("worker");
+            // 调用服务层处理工单接受逻辑
+            repairService.rejectTask(taskId, workerName);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    @PutMapping("/{task-id}/complete")
+    public void completeTask(@PathVariable("task-id") String taskid) {
+        try {
+            Long taskId = Long.valueOf(taskid);
+            repairService.completeTask(taskId);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    @PutMapping("/{task-id}/materials")
+    public void updateMaterials(@PathVariable("task-id") String taskid, @RequestBody Map<String, Object> request) {
+        try {
+            Long taskId = Long.valueOf(taskid);
+            List<Map<String, Object>> materialsList = (List<Map<String, Object>>) request.get("materials");
+            repairService.updateMaterials(taskId, materialsList);
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
