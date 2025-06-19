@@ -1,9 +1,7 @@
 package com.example.vehiclerepairsystem.service;
 
-import com.example.vehiclerepairsystem.model.OrderWorkerAssignment;
-import com.example.vehiclerepairsystem.model.RepairOrder;
-import com.example.vehiclerepairsystem.model.User;
-import com.example.vehiclerepairsystem.model.Vehicle;
+import com.example.vehiclerepairsystem.model.*;
+import com.example.vehiclerepairsystem.repository.PaymentRepository;
 import com.example.vehiclerepairsystem.repository.RepairOrderRepository;
 import com.example.vehiclerepairsystem.repository.UserRepository;
 import com.example.vehiclerepairsystem.repository.VehicleRepository;
@@ -25,14 +23,16 @@ public class RepairOrderService {
     private final RepairOrderRepository repairOrderRepository;
     private final UserRepository userRepository;
     private final VehicleRepository vehicleRepository;
+    private final PaymentRepository paymentRepository;
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
     public RepairOrderService(RepairOrderRepository repairOrderRepository,
-                              UserRepository userRepository, VehicleRepository vehicleRepository) {
+                              UserRepository userRepository, VehicleRepository vehicleRepository, PaymentRepository paymentRepository) {
         this.repairOrderRepository = repairOrderRepository;
         this.userRepository = userRepository;
         this.vehicleRepository = vehicleRepository;
+        this.paymentRepository = paymentRepository;
     }
 
     @Transactional
@@ -97,10 +97,13 @@ public class RepairOrderService {
                     return materialMap;
                 })
                 .collect(Collectors.toList());
-
-        double totalCost = materials.stream()
-                .mapToDouble(material -> ((Number) material.get("subtotal")).doubleValue())
-                .sum();
+        Payment payment = paymentRepository.findByRepairOrder(repairOrder);
+        double totalCost = 0;
+        double workerCost = 0;
+        if(payment != null) {
+            totalCost = payment.getTotalMaterialCost().doubleValue() + payment.getAmount().doubleValue();
+            workerCost = payment.getAmount().doubleValue();
+        }
 
         Map<String, Object> workerResult = new HashMap<>();
         OrderWorkerAssignment workerAssignment = repairOrder.getWorker();
@@ -123,7 +126,10 @@ public class RepairOrderService {
         result.put("completionTime", repairOrder.getCompletionTime());
         result.put("worker", workerResult);
         result.put("materials", materials);
+        if(payment != null){
         result.put("totalCost", totalCost);
+        result.put("workerCost", workerCost);
+        }
 
         return result;
 

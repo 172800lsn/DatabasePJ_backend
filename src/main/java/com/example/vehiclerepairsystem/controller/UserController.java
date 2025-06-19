@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -123,6 +124,40 @@ public class UserController {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(500).body("服务器内部错误: " + e.getMessage());
+        }
+    }
+    @PostMapping("/update-information")
+    public ResponseEntity<?> updateUserInformation(@RequestBody Map<String,String> UserData) {
+        try {
+            String username = UserData.get("username");
+            String email = UserData.get("email");
+            String name = UserData.get("name");
+            User user = userService.findByUsernameReally(username);
+            user.setName(name);
+            user.setEmail(email);
+            if(UserData.get("jobType")!=null){
+                user.setWorkType(UserData.get("jobType"));
+            }
+            if(UserData.get("hourlyRate")!=null){
+                user.setHourlyRate(new BigDecimal(UserData.get("hourlyRate")));
+            }
+            userService.updateUser(user.getId(), user);
+            System.out.println("User id: " + user.getId());
+            System.out.println("workType: " + user.getWorkType());
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", user.getId());
+            response.put("role", user.getRole());
+            response.put("username", user.getUsername());
+            response.put("name", user.getName());
+            response.put("email", user.getEmail());
+            response.put("workType", user.getWorkType());
+            response.put("hourlyRate", user.getHourlyRate());
+            response.put("success", "True");
+            System.out.println("User found: " + response);
+            return ResponseEntity.ok(response);
+        }
+        catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

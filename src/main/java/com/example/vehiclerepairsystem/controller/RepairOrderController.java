@@ -1,6 +1,8 @@
 package com.example.vehiclerepairsystem.controller;
 
+import com.example.vehiclerepairsystem.model.Payment;
 import com.example.vehiclerepairsystem.model.RepairOrder;
+import com.example.vehiclerepairsystem.model.User;
 import com.example.vehiclerepairsystem.model.Vehicle;
 import com.example.vehiclerepairsystem.service.*;
 import org.springframework.http.ResponseEntity;
@@ -137,8 +139,12 @@ public class RepairOrderController {
                 task.put("id", order.getId());
                 task.put("description", order.getDescription());
                 Vehicle vehicle = order.getVehicle();
+                Payment payment = repairService.getPaymentByRepairOrderId(order.getId());
                 String vehicleInfo = vehicle.getVehicleInfo();
                 task.put("vehicleInfo", vehicleInfo);
+                task.put("feedback", order.getFeedback());
+                task.put("score", order.getScore());
+                task.put("salary", payment!= null? payment.getAmount().doubleValue() : 0);
                 return task;
             }).collect(Collectors.toList());
 
@@ -156,10 +162,17 @@ public class RepairOrderController {
             RepairOrder repairOrder = repairService.findRepairOrderById(orderId);
             Map<String, Object> response = new HashMap<>();
             response.put("description", repairOrder.getDescription());
+            response.put("isUrgent", repairOrder.getIsUrgent());
+            User requestUser = repairOrder.getRequestUser();
+            if(requestUser != null&& requestUser.getEmail() != null) {
+                response.put("requestUserEmail", requestUser.getEmail());
+                System.out.println("requestUserEmail: " + requestUser.getEmail());
+            }
 
             // 获取车辆信息
             Vehicle vehicle = repairOrder.getVehicle();
             response.put("vehicleInfo", vehicle != null ? vehicle.getVehicleInfo() : "");
+
 
             // 处理材料信息
             List<Map<String, Object>> materials = Optional.ofNullable(repairOrder.getMaterials())
@@ -210,10 +223,12 @@ public class RepairOrderController {
         }
     }
     @PutMapping("/{task-id}/complete")
-    public void completeTask(@PathVariable("task-id") String taskid) {
+    public void completeTask(@PathVariable("task-id") String taskid, @RequestBody Map<String, Object> requestData) {
         try {
             Long taskId = Long.valueOf(taskid);
-            repairService.completeTask(taskId);
+            Number workTimeData = (Number) requestData.get("hours");
+            Double workTime = workTimeData.doubleValue();
+            repairService.completeTask(taskId, workTime);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -225,7 +240,6 @@ public class RepairOrderController {
             Long taskId = Long.valueOf(taskid);
             List<Map<String, Object>> materialsList = (List<Map<String, Object>>) request.get("materials");
             repairService.updateMaterials(taskId, materialsList);
-
         }
         catch (Exception e) {
             e.printStackTrace();

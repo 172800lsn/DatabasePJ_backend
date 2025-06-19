@@ -58,6 +58,8 @@ public class RepairOrder {
 
     private LocalDateTime completionTime; // 完成时间
 
+    private Double workTime;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false,columnDefinition = "VARCHAR(20)")
     private Status status; // 订单状态

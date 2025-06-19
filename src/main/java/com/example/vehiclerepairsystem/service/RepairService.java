@@ -25,14 +25,14 @@ public class RepairService {
     private final UserRepository userRepository;
     private final VehicleRepository vehicleRepository;
     private final AssignmentRepository assignmentRepository;
-    private final PaymentRepository PaymentRepository;
+    private final PaymentRepository paymentRepository;
 
     public RepairService(RepairOrderRepository repairOrderRepository, UserRepository userRepository, VehicleRepository vehicleRepository, AssignmentRepository assignmentRepository, PaymentRepository paymentRepository) {
         this.repairOrderRepository = repairOrderRepository;
         this.userRepository = userRepository;
         this.vehicleRepository = vehicleRepository;
         this.assignmentRepository = assignmentRepository;
-        this.PaymentRepository = paymentRepository;
+        this.paymentRepository = paymentRepository;
     }
     @Async
     @EventListener
@@ -64,7 +64,7 @@ public class RepairService {
             Object nameObj = mat.get("name");
             material.setName(nameObj != null ? nameObj.toString() : "");
             material.setQuantity(((Integer) mat.get("quantity")).intValue());
-            material.setPrice(new BigDecimal(0));
+            material.setPrice(new BigDecimal(mat.get("price").toString()));
             material.setRepairOrder(order);
             material.setSubmittedByWorker(worker);
             return material;
@@ -94,6 +94,8 @@ public class RepairService {
               .orElseThrow(() -> new IllegalArgumentException("维修记录未找到"));
        OrderWorkerAssignment assignment = assignmentRepository.findByRepairOrderId(taskId);
         List<User> workers = userRepository.findByRole(User.Role.WORKER);
+        //不能再被选中
+        workers.remove(assignment.getWorker());
         if (workers.isEmpty()) {
             throw new IllegalStateException("没有可用的维修工人");
         }
@@ -101,10 +103,28 @@ public class RepairService {
         assignment.setWorker(assignedWorker);
     }
     @Transactional
-    public void completeTask(Long taskId) {
+    public void completeTask(Long taskId,Double workTime) {
         RepairOrder repairOrder = repairOrderRepository.findById(taskId)
                .orElseThrow(() -> new IllegalArgumentException("维修记录未找到"));
+        repairOrder.setWorkTime(workTime);
         repairOrder.setStatus(RepairOrder.Status.COMPLETED);
+        Payment payment = new Payment();
+        payment.setRepairOrder(repairOrder);
+        List <Material> materials = repairOrder.getMaterials();
+        BigDecimal totalMaterialCost = materials.stream()
+                .map(Material::getSubtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        payment.setTotalMaterialCost(totalMaterialCost);
+        BigDecimal hourlyRate = repairOrder.getWorker().getWorker().getHourlyRate();
+        BigDecimal totalWorkCost = BigDecimal.valueOf(workTime).multiply(hourlyRate);
+        payment.setAmount(totalWorkCost);
+        paymentRepository.save(payment);
+    }
+    public Payment getPaymentByRepairOrderId(Long repairOrderId) {
+        RepairOrder repairOrder = repairOrderRepository.findById(repairOrderId)
+              .orElseThrow(() -> new IllegalArgumentException("维修记录未找到"));
+
+        return paymentRepository.findByRepairOrder(repairOrder);
     }
 
 }

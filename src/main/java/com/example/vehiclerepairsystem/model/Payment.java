@@ -28,6 +28,6 @@ public class Payment {
     private BigDecimal totalMaterialCost; // 材料费总和
 
     @Column(nullable = false)
-    private BigDecimal amount; // 支付金额
+    private BigDecimal amount; // 支付工人的金额
 
 }

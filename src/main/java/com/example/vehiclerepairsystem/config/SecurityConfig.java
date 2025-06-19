@@ -67,7 +67,8 @@ public class SecurityConfig {
                         // ✅ 根据角色限制新增的用户管理功能
                         .requestMatchers("/api/test/user/get-all").permitAll() // 获取用户列表
                         // 仅管理员可以访问
-                        .requestMatchers("/api/test/user/delete/**").permitAll() // 删除用户
+                        .requestMatchers("/api/test/user/delete/**",
+                                "api/test/user/update-information").permitAll() // 删除用户
                          // 仅管理员可以访问
                         .requestMatchers("/api/test/user/update/**").permitAll() // 删除用户
 
