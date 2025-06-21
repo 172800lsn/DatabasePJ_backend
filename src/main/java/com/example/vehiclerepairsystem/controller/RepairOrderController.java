@@ -97,6 +97,7 @@ public class RepairOrderController {
                 Vehicle vehicle = order.getVehicle();
                 String vehicleInfo = vehicle.getVehicleInfo();
                 task.put("vehicleInfo", vehicleInfo);
+               task.put("isUrgent", order.getIsUrgent());
                 return task;
             }).collect(Collectors.toList());
 

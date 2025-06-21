@@ -30,7 +30,8 @@ public class Material {
 
     // 关联的维修订单
     @ManyToOne
-    @JoinColumn(name = "repair_order_id", nullable = false)
+    @JoinColumn(name = "repair_order_id", nullable = false, foreignKey = @ForeignKey(
+            foreignKeyDefinition = "FOREIGN KEY (repair_order_id) REFERENCES repair_order(id) ON DELETE CASCADE"))
     private RepairOrder repairOrder;
 
     // 提交维修材料的维修工
